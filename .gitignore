@@ -1,0 +1,26 @@
+# Environment files (Security)
+.env
+.env.local
+
+# Java / Maven artifacts
+**/target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+
+# Node / React artifacts
+**/node_modules/
+**/dist/
+.eslintcache
+npm-debug.log*
+
+# IDE Settings
+.idea/
+.vscode/
+*.swp
+*.iml
+
+# OS files
+Thumbs.db
+.DS_Store

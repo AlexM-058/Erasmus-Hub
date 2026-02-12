@@ -1,0 +1,63 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: erasmus-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - erasmus_db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - erasmus-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: 
+      context: ./backend 
+      dockerfile: Dockerfile
+    container_name: erasmus-backend
+    volumes:
+      - ./backend:/app 
+      - maven_data:/root/.m2
+    ports:
+      - "${BACKEND_PORT}:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - erasmus-net
+
+  frontend:
+    image: node:20-alpine
+    container_name: erasmus-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules 
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    environment:
+      - CHOKIDAR_USEPOLLING=true 
+    stdin_open: true 
+    tty: true
+    networks:
+      - erasmus-net
+    command: sh -c "npm install && npm run dev"
+
+networks:
+  erasmus-net:
+
+volumes:
+  erasmus_db_data:
+  maven_data:
